@@ -9,6 +9,8 @@
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
 uint16_t numTracksInFolder;
 uint16_t currentTrack;
+uint16_t currentVolume = 8;
+uint16_t maxVolume = 10;
 
 // this object stores nfc tag data
 struct nfcTagObject {
@@ -203,7 +205,7 @@ void setup() {
 
   // DFPlayer Mini initialisieren
   mp3.begin();
-  mp3.setVolume(15);
+  mp3.setVolume(currentVolume);
 
   // NFC Leser initialisieren
   SPI.begin();        // Init SPI bus
@@ -258,24 +260,38 @@ void loop() {
       ignorePauseButton = true;
     }
 
-    if (upButton.pressedFor(LONG_PRESS)) {
-      Serial.println(F("Volume Up"));
-      mp3.increaseVolume();
+    if (upButton.pressedFor(LONG_PRESS) && ignoreUpButton == false) {
+      //mp3.increaseVolume();
+      nextTrack(random(65536));
       ignoreUpButton = true;
     } else if (upButton.wasReleased()) {
-      if (!ignoreUpButton)
-        nextTrack(random(65536));
+      if (!ignoreUpButton){
+        //nextTrack(random(65536));
+        Serial.println(F("Volume Up"));
+        currentVolume += 1;
+        if (currentVolume > maxVolume){
+          currentVolume = maxVolume;
+        }
+        mp3.setVolume(currentVolume);
+      }
       else
         ignoreUpButton = false;
     }
 
-    if (downButton.pressedFor(LONG_PRESS)) {
-      Serial.println(F("Volume Down"));
-      mp3.decreaseVolume();
+    if (downButton.pressedFor(LONG_PRESS) && ignoreDownButton == false) {
+      //mp3.decreaseVolume();
+      previousTrack();
       ignoreDownButton = true;
     } else if (downButton.wasReleased()) {
-      if (!ignoreDownButton)
-        previousTrack();
+      if (!ignoreDownButton){
+        //previousTrack();
+        Serial.println(F("Volume Down"));
+        currentVolume -= 1;
+        if (currentVolume <= 1 ){
+          currentVolume = 1;
+        }
+        mp3.setVolume(currentVolume);
+      }
       else
         ignoreDownButton = false;
     }
